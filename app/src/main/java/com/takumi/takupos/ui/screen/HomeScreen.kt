@@ -23,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.takumi.takupos.ui.components.CategoryCard
@@ -48,8 +49,8 @@ fun HomeScreen(
     LaunchedEffect(key1 = listState) {
         snapshotFlow { listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset }
             .collect { (index, offset) ->
-                val threshold = 50 // Ambang batas untuk trigger animasi
-                isHeaderVisible = index == 0 && offset < threshold || offset < lastScrollOffset
+                val threshold = 50
+                isHeaderVisible = index == 0 || offset < lastScrollOffset
                 lastScrollOffset = offset
             }
     }
@@ -70,12 +71,15 @@ fun HomeScreen(
                     .padding(vertical = 8.dp)
             )
         }
-        HorizontalDivider()
+        HorizontalDivider(
+            thickness = 1.dp,
+            modifier = Modifier.shadow(2.dp)
+        )
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
             modifier = modifier.fillMaxSize(),
             contentPadding = PaddingValues(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             state = listState
         ) {

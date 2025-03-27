@@ -1,16 +1,26 @@
 package com.takumi.takupos
 
 import android.content.Context
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
@@ -21,9 +31,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
+import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -34,9 +48,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.LineHeightStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.min
+import androidx.compose.ui.unit.sp
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
@@ -51,7 +71,10 @@ import androidx.navigation.compose.rememberNavController
 import com.takumi.takupos.core.Constants.SEARCH_HISTORY_KEY
 import com.takumi.takupos.ui.components.TakuPOSBottomBar
 import com.takumi.takupos.ui.navigation.Screen
+import com.takumi.takupos.ui.screen.HistoryScreen
 import com.takumi.takupos.ui.screen.HomeScreen
+import com.takumi.takupos.ui.screen.ScanScreen
+import com.takumi.takupos.ui.theme.TakuPOSTheme
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -69,7 +92,7 @@ fun TakuPOSApp(
     }
 
     Scaffold(
-        modifier = Modifier.windowInsetsPadding(WindowInsets.statusBars),
+        contentWindowInsets = WindowInsets.systemBars,
         topBar = {
             if (currentRoute == Screen.Home.route) HomeTopBar(onSearchStateChange = {
                 isSearchActive = it
@@ -89,6 +112,12 @@ fun TakuPOSApp(
             composable(Screen.Home.route) {
                 HomeScreen()
             }
+            composable(Screen.History.route) {
+                HistoryScreen()
+            }
+            composable(Screen.Scan.route) {
+                ScanScreen()
+            }
         }
     }
 }
@@ -98,23 +127,46 @@ fun HomeTopBar(
     modifier: Modifier = Modifier,
     onSearchStateChange: (Boolean)-> Unit
 ) {
-    Row(
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp)
-            .padding(bottom = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Search(onSearchStateChange)
-        IconButton(
-            onClick = { /*TODO*/ },
-            modifier = Modifier.weight(1f)
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.cart_outlined),
-                contentDescription = "Keranjang",
-                modifier = modifier.size(32.dp)
+            .height(
+                72.dp + WindowInsets.statusBars
+                    .asPaddingValues()
+                    .calculateTopPadding()
             )
+            .background(color = MaterialTheme.colorScheme.primary)
+            .padding(8.dp),
+        contentAlignment = Alignment.BottomCenter
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.motif),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            TakuSearchBar(
+                text = "", onTextChange = {}, hint = "Cari produk..", modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            IconButton(
+                onClick = { /*TODO*/ },
+                modifier = Modifier
+                    .size(32.dp)
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.cart_outlined),
+                    contentDescription = "Keranjang",
+                    modifier = Modifier,
+                    tint = MaterialTheme.colorScheme.onPrimary
+                )
+            }
         }
     }
 }
@@ -183,7 +235,13 @@ fun Search(
                 text = "Cari produk disini!",
                 color = MaterialTheme.colorScheme.secondary
             )
-        }
+        },
+        colors = SearchBarDefaults.colors(
+            containerColor = MaterialTheme.colorScheme.background,
+            inputFieldColors = TextFieldDefaults.colors(
+                unfocusedContainerColor = MaterialTheme.colorScheme.background
+            )
+        )
     ) {
         val searchHistory by getSearchHistory(context).collectAsState(initial = emptyList())
 
@@ -205,6 +263,49 @@ fun Search(
                 }
             )
         }
+    }
+}
+
+@Composable
+fun TakuSearchBar(
+    modifier: Modifier = Modifier,
+    text: String,
+    onTextChange: (String)-> Unit,
+    hint: String,
+    enabled: Boolean = true
+) {
+    OutlinedTextField(
+        value = text,
+        onValueChange = onTextChange,
+        modifier = modifier,
+        enabled = enabled,
+        colors = OutlinedTextFieldDefaults.colors(
+            unfocusedContainerColor = MaterialTheme.colorScheme.background,
+            focusedContainerColor = MaterialTheme.colorScheme.background,
+            unfocusedBorderColor = Color.LightGray,
+            focusedBorderColor = MaterialTheme.colorScheme.primary,
+            unfocusedPlaceholderColor = MaterialTheme.colorScheme.secondary,
+            focusedPlaceholderColor = MaterialTheme.colorScheme.secondary,
+            disabledPlaceholderColor = MaterialTheme.colorScheme.secondary
+        ),
+        textStyle = TextStyle(fontSize = 12.sp),
+        shape = MaterialTheme.shapes.medium,
+        leadingIcon = {
+            Icon(
+                imageVector = Icons.Default.Search,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.secondary
+            )
+        },
+        placeholder = { Text(text = hint) }
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PrevSearchBar() {
+    TakuPOSTheme {
+        TakuSearchBar(text = "Test", onTextChange = {}, hint = "Tes")
     }
 }
 

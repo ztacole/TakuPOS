@@ -41,7 +41,7 @@ fun TakuPOSBottomBar(
             ),
             NavigationItem(
                 title = "Scan",
-                route = "QR",
+                route = Screen.Scan.route,
                 selectedIcon = R.drawable.scan_qr,
                 unselectedIcon = R.drawable.scan_qr
             ),
