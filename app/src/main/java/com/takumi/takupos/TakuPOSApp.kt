@@ -33,6 +33,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -150,9 +151,17 @@ fun Search(
                 isActive = false
                 onSearchStateChange(false)
             }) {
-                Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Kembali")
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Kembali",
+                    tint = Color.Gray
+                )
             }
-            else Icon(imageVector = Icons.Default.Search, contentDescription = "Cari")
+            else Icon(
+                imageVector = Icons.Default.Search,
+                contentDescription = "Cari",
+                tint = Color.Gray
+            )
         },
         trailingIcon = {
             if (isActive) IconButton(onClick = {
@@ -162,7 +171,11 @@ fun Search(
                 }
                 else query = ""
             }) {
-                Icon(imageVector = Icons.Default.Close, contentDescription = "Hapus")
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Hapus",
+                    tint = Color.Gray
+                )
             }
         },
         placeholder = {
