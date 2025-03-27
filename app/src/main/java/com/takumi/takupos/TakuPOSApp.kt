@@ -100,7 +100,8 @@ fun HomeTopBar(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp),
+            .padding(horizontal = 8.dp)
+            .padding(bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Search(onSearchStateChange)
